@@ -1,65 +1,93 @@
 import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.InputStreamReader
+import java.lang.Exception
 import java.net.Socket
+import java.net.SocketTimeoutException
 import java.util.*
 
 class ConnectionHandler(val clientSocket: Socket) : Runnable {
 
-    val inputScanner = Scanner(BufferedReader(InputStreamReader(clientSocket.getInputStream()))).useDelimiter("")
+    val inputReader = BufferedReader(InputStreamReader(clientSocket.getInputStream()))
     val outputStream = DataOutputStream(clientSocket.getOutputStream())
     val controller = ConnectionController()
     var tmpInput = String()
-    var firstMessage = String()
+    var cnt = 0
 
     override fun run() {
-        clientSocket.soTimeout = controller.getTimetout()
+        try {
+            while (true) {
+                clientSocket.soTimeout = controller.getTimeout()
+                //  println("${clientSocket.soTimeout}")
 
-        while (true) {
-            clientSocket.soTimeout = controller.getTimetout()
+                while (inputReader.ready()) {
+                    val int = inputReader.read()
+                    //  println(int)
+                    tmpInput += int.toChar()
+                }
 
-            if (inputScanner.hasNext()) {
-                tmpInput += inputScanner.next()
-            }
+                if (tmpInput.isNotEmpty()) {
+                    print("TMP: $tmpInput\nTMP in ASCII:")
+                    for (letter in tmpInput) {
+                        print(" ${letter.toInt()},")
+                    }
+                    println("")
 
-            if (hasAtLeastOneMessage(tmpInput)) {
-                val response = controller.createNextStep (getFirstMessage(tmpInput))
-                println(response.content)
-                if (response.isLast){
-                    close()
+                }
+
+
+                val response: Response = if (hasAtLeastOneMessage(tmpInput)) {
+                    controller.createNextStep(getFirstMessage())
+                } else {
+                    controller.prevalidate(tmpInput)
+                }
+
+                if (response.content != "") {
+                    println("Sending message: ${response.content}\n")
+                    outputStream.write(response.content.toByteArray())
+                    outputStream.flush()
+                }
+
+                if (response.isLast) {
+                    println("Closing connection with ${clientSocket.inetAddress}")
                     break
                 }
-            } else {
-                val response = controller.prevalidate(tmpInput)
             }
-
+        } catch (ex: Exception) {
+            println("Error: $ex")
         }
 
-    }
+        close()
 
-    // TODO zamyslet se nad rozumnem rozdeleni logiky a handleru connection, co dela kdo
-    // TODO handler zpracovava vstup a preda ho dal, ale mel by predat jen jednu zpravu, takze musi umet i optimalizovat, ale delka zpravy je vec logiky
-    // TODO resi se jen situace, kdy nestihne dojit \a\b, zbytek muze v pohode resit logika
+    }
 
     private fun hasAtLeastOneMessage(tmpInput: String): Boolean {
-        return tmpInput.contains("\u0007\b")
+        return tmpInput.contains("\u0007\b") || ((controller.state == State.PICK_UP || controller.state == State.SEARCH_ZONE) && tmpInput == "\u0007\b")
     }
 
 
-    private fun getFirstMessage(tmpInput: String): String {
-        if (!tmpInput.contains("\u0007\b")) {
-            if (!controller.checkLength(tmpInput) && !controller.checkLength(tmpInput)) {
-                throw Error("Fail") // TODO
-            }
+    private fun getFirstMessage(): String {
+        if ((controller.state == State.PICK_UP || controller.state == State.SEARCH_ZONE) && tmpInput == "\u0007\b") {
+            tmpInput = ""
             return ""
+        } else {
+            if (!tmpInput.contains("\u0007\b")) {
+                if (!controller.checkLength(tmpInput.length)) {
+                    throw Error("Fail") // TODO
+                }
+
+                throw Error("Fail 2") // TODO
+            }
+            val retString = tmpInput.substringBefore("\u0007\b")
+            tmpInput = tmpInput.substringAfter("\u0007\b")
+            return retString
         }
-        return ""
     }
 
-    private fun close(){
-        inputScanner.close()
-        outputStream.close()
+    private fun close() {
         clientSocket.close()
+        inputReader.close()
+        outputStream.close()
     }
 
 

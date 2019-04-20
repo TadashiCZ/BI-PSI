@@ -25,8 +25,14 @@ fun main(args: Array<String>) {
         }
 
         println("Accepted connection from robot: " + clientSocket.inetAddress)
-        val handler = ConnectionHandler(clientSocket)
-        Thread(handler).run()
+        var handler: ConnectionHandler? = null
+        try {
+            handler = ConnectionHandler(clientSocket)
+        } catch (e: Exception) {
+            println("Can't initialize Handler: $e")
+        }
+
+        Thread(handler).start()
     }
 
 
