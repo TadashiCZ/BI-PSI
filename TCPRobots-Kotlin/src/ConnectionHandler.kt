@@ -17,8 +17,8 @@ class ConnectionHandler(val clientSocket: Socket) : Runnable {
         try {
             var int : Int
             while (true) {
-                /*  while (inputReader.ready()) {
-                      clientSocket.soTimeout = controller.getTimeout()
+                clientSocket.soTimeout = controller.getTimeout()
+                  while (inputReader.ready()) {
                       val int = inputReader.read()
                       //  println(int)
                       if (int == -1) {
@@ -26,16 +26,16 @@ class ConnectionHandler(val clientSocket: Socket) : Runnable {
                       }
                       tmpInput += int.toChar()
                   }
-                  */
 
-                while (true) {
+
+               /* while (true) {
                     int = inputReader.read()
                     if (int == -1){
                         break
                     }
                     clientSocket.soTimeout = controller.getTimeout()
                     tmpInput += int.toChar()
-                }
+                }*/
 
 
                 if (tmpInput.isNotEmpty()) {
@@ -53,6 +53,7 @@ class ConnectionHandler(val clientSocket: Socket) : Runnable {
                 } else {
                     controller.prevalidate(tmpInput)
                 }
+
 
                 if (response.content != "") {
                     println("Sending message: ${response.content}\n")

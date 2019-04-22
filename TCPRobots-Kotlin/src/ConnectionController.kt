@@ -13,7 +13,7 @@ enum class State {
 
 class ConnectionController {
 
-    private var charging: Boolean = false
+    var charging: Boolean = false
     var state = State.USERNAME
     var robot: Robot? = null
     var searched = 0
