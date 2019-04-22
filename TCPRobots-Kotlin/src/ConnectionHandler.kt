@@ -3,8 +3,7 @@ import java.io.DataOutputStream
 import java.io.InputStreamReader
 import java.lang.Exception
 import java.net.Socket
-import java.net.SocketTimeoutException
-import java.util.*
+
 
 class ConnectionHandler(val clientSocket: Socket) : Runnable {
 
@@ -12,19 +11,32 @@ class ConnectionHandler(val clientSocket: Socket) : Runnable {
     val outputStream = DataOutputStream(clientSocket.getOutputStream())
     val controller = ConnectionController()
     var tmpInput = String()
-    var cnt = 0
 
     override fun run() {
-        try {
-            while (true) {
-                clientSocket.soTimeout = controller.getTimeout()
-                //  println("${clientSocket.soTimeout}")
 
-                while (inputReader.ready()) {
-                    val int = inputReader.read()
-                    //  println(int)
+        try {
+            var int : Int
+            while (true) {
+                /*  while (inputReader.ready()) {
+                      clientSocket.soTimeout = controller.getTimeout()
+                      val int = inputReader.read()
+                      //  println(int)
+                      if (int == -1) {
+                          break
+                      }
+                      tmpInput += int.toChar()
+                  }
+                  */
+
+                while (true) {
+                    int = inputReader.read()
+                    if (int == -1){
+                        break
+                    }
+                    clientSocket.soTimeout = controller.getTimeout()
                     tmpInput += int.toChar()
                 }
+
 
                 if (tmpInput.isNotEmpty()) {
                     print("TMP: $tmpInput\nTMP in ASCII:")
