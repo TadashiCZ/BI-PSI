@@ -30,7 +30,7 @@ enum class Orientation {
 class Robot(name: String) {
     var orientation = Orientation.UNINITIALIZED
     var coordinates = Coordinates(666, 666)
-    val nameHash: Int
+    private val nameHash: Int
     val clientHash: Int
     val serverHash: Int
 
@@ -39,10 +39,13 @@ class Robot(name: String) {
         for (letter in name) {
             hash += letter.toInt()
         }
+
+
         hash = (hash * 1000) % 65536
         nameHash = hash;
         serverHash = (nameHash + SERVER_KEY) % 65536
         clientHash = (nameHash + CLIENT_KEY) % 65536
+
     }
 
     fun isNextMoveRotation(): Boolean {

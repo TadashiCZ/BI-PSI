@@ -1,42 +1,34 @@
-import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.InputStreamReader
-import java.lang.Exception
 import java.net.Socket
 
 
-class ConnectionHandler(val clientSocket: Socket) : Runnable {
+class ConnectionHandler(private val clientSocket: Socket) : Runnable {
 
-    val inputReader = BufferedReader(InputStreamReader(clientSocket.getInputStream()))
-    val outputStream = DataOutputStream(clientSocket.getOutputStream())
-    val controller = ConnectionController()
+    private val inputReader = InputStreamReader(clientSocket.getInputStream())
+    private val outputStream = DataOutputStream(clientSocket.getOutputStream())
+    private val controller = ConnectionController()
     var tmpInput = String()
 
     override fun run() {
 
         try {
-            var int : Int
             while (true) {
                 clientSocket.soTimeout = controller.getTimeout()
-                  while (inputReader.ready()) {
-                      val int = inputReader.read()
-                      //  println(int)
-                      if (int == -1) {
-                          break
-                      }
-                      tmpInput += int.toChar()
-                  }
+                val tmpBuffer = "čččččččččččč".toCharArray()
+                val ret = inputReader.read(tmpBuffer, 0, 12)
+                if (ret == -1) {
+                    break
+                }
 
-
-               /* while (true) {
-                    int = inputReader.read()
-                    if (int == -1){
+                val inp = StringBuilder()
+                for (i in 0 until tmpBuffer.size) {
+                    if (tmpBuffer[i] == 'č') {
                         break
                     }
-                    clientSocket.soTimeout = controller.getTimeout()
-                    tmpInput += int.toChar()
-                }*/
-
+                    inp.append(tmpBuffer[i])
+                }
+                tmpInput += inp.toString()
 
                 if (tmpInput.isNotEmpty()) {
                     print("TMP: $tmpInput\nTMP in ASCII:")

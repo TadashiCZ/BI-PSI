@@ -1,10 +1,9 @@
 import java.io.IOException
-import java.lang.Exception
 import java.net.ServerSocket
 import java.net.Socket
 
 fun main(args: Array<String>) {
-    var serverSocket: ServerSocket
+    val serverSocket: ServerSocket
     try {
         serverSocket = ServerSocket(args[0].toInt())
     } catch (ex: IOException) {

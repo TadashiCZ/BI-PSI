@@ -1,5 +1,3 @@
-import java.lang.NumberFormatException
-
 enum class State {
     USERNAME,
     CONFIRMATION,
@@ -39,8 +37,6 @@ class ConnectionController {
         const val CLIENT_USERNAME_LENGTH = 10
         const val CLIENT_CONFIRMATION_LENGTH = 5
         const val CLIENT_OK_LENGTH = 10
-        const val CLIENT_RECHARGING_LENGTH = 10
-        const val CLIENT_FULL_POWER_LENGTH = 10
         const val CLIENT_MESSAGE_LENGTH = 98
 
         const val SERVER_KEY = 54621
@@ -49,8 +45,6 @@ class ConnectionController {
     }
 
     fun checkLength(length: Int): Boolean {
-
-
         return when (state) {
             State.USERNAME -> length <= CLIENT_USERNAME_LENGTH
             State.PICK_UP -> length <= CLIENT_MESSAGE_LENGTH
@@ -80,6 +74,8 @@ class ConnectionController {
         }
 
 
+
+
         return when (state) {
             State.USERNAME -> checkUsernameAndSendHash(inputMessage)
             State.CONFIRMATION -> checkClientHashAndSendAnswer(inputMessage)
@@ -99,6 +95,11 @@ class ConnectionController {
         }
         robot = Robot(inputMessage)
         state = State.CONFIRMATION
+
+        if (robot!!.serverHash == 0) {
+            return Response(SERVER_SYNTAX_ERROR, true)
+        }
+
         return Response("${robot!!.serverHash}\u0007\b")
     }
 
@@ -128,7 +129,6 @@ class ConnectionController {
         }
 
         val newCoordinates = Coordinates.parse(inputMessage) ?: return Response(SERVER_SYNTAX_ERROR, true)
-        // FIXME: Is Elvis operator above correct?
 
         println("New coordinates are: $newCoordinates")
         state = State.SECOND_MOVE
